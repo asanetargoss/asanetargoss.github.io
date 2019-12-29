@@ -1,0 +1,63 @@
+<head>
+<meta charset="utf-8">
+<title>Reflection/Coremodding PSA from a frustrated add-on developer</title>
+</head>
+<span id="top"></span>
+
+# Reflection/Coremodding PSA from a frustrated add-on developer
+
+*[asanetargoss](../), 2019-12-28*
+
+## What not to do
+
+If you are a Minecraft mod developer and use reflection/coremodding in your mods, this PSA is for you!
+
+Here's the PSA:
+
+Do not use hardcoded strings containing version-dependent method and field names! ("Notch names," "MCP Names," "Yarn names," etc.)
+
+For example... DO NOT DO THESE:
+
+`String runtimeName = areWeObfuscated() ? hardcodedSrgName : hardcodedMCPName;`
+
+`String runtimeName = areWeObfuscated() ? hardcodedIntermediaryName : hardcodedYarnName;`
+
+(for the record, mcp/yarn names look like camel case Java code in normal English)
+
+or even worse... this (when writing a coremod):
+
+`String runtimeName = areWeObfuscated() ? hardcodedNotchName : hardcodedMCPName;`
+
+(for the record, Notch names are ProGuard-obfuscated names and look like this: "a", "ba", "g")
+
+If your mod uses such hardcoded strings (mcp, yarn, notch), and the naming environment changes, your mod WILL CRASH the game, without compilation errors or any other warnings beforehand. These crashes are preventable!
+
+## What to do instead
+
+Your hardcoded method/field strings should only use names designed to last between versions ("Searge names," "Intermediary names," etc.). You should dynamically determine the correct names from the more lasting names.
+
+For example... do these instead:
+
+`String runtimeName = mappingFunction(hardcodedSrgName); // No hardcoded MCP name!`
+
+`String runtimeName = mappingFunction(hardcodedIntermediaryName); // No hardcoded Yarn name!`
+
+(for the record, Searge/Intermediary names are generic words followed by numbers and sometimes letters, e.g. "func_90001_a" or "method_90342")
+
+On Forge for 1.6-1.12 (and possibly older versions), this involves reading some environment variables, and if in a development environment, loading a CSV file. See the Forge utility classes `ObfuscationReflectionHelper` and `FMLDeobfuscatingRemapper`, which do this for you. I personally use [my own implementation](https://github.com/asanetargoss/HardcoreAlchemy/blob/60aa217b3aed2a8ab271761a393f80f61d098180/src/main/java/targoss/hardcorealchemy/coremod/ObfuscatedName.java). Coremods should also have the `@IFMLLoadingPlugin.SortingIndex` annotation, with a value of 1001 or greater, so they can enjoy the benefits of Searge names.
+
+This is also relevant for Forge/Fabric for 1.13+, and possibly other modloaders as well, although the details may be different.
+
+## Epilogue
+
+I have done cross-mod compatibility in some form or another which has touched at least 18 different mods (as of 2019). So, I guess you could say I'm an add-on developer. What I have described above does not just save add-on devs time, but saves you time as well when porting.
+
+Honestly, I was discouraged to write this because I simply can't keep up with Minecraft updates, so I can't give the most up-to-date-information, but as I have learned, issues tend to stick around after mods get ported to new Minecraft versions. :)
+
+There are other ways to make add-on development easier at the cost of your time, for example, making sure that your mod uses the latest mappings available for your version, and making sure your mod's compilation instructions are up-to-date. Some mod developers even provide a gradle script snippet for developing with their mods, which is very convenient! I personally don't mind downloading the mod manually because I have my own collection of tools for dealing with random mods with no dev builds, and frequently make custom builds. This is a reflection of the fact that most of my mod development is done in support of a modpack. Most modders have less patience for dealing with cross-mod compatibility.
+
+[^ Jump to top](#top)
+
+<style class="fallback">body{visibility:hidden}</style><script>markdeepOptions={tocStyle:'none'};</script>
+<link rel="stylesheet" href="3rdparty/markdeep/markdeep_apidoc.css?">
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="3rdparty/markdeep/markdeep.min.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

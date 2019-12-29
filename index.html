@@ -5,7 +5,7 @@
     <meta name="description" content="Random musings and perhaps an actual website someday." />
 <style type="text/css">
     body {
-        background-color: #CCCCCC;
+        //background-color: #CCCCCC;
         font-family: Arial,sans-serif;
     }
     #main {
@@ -13,10 +13,10 @@
         max-width: 900px;
         padding: 10px 40px;
         margin: 0 auto 64px auto;
-        border-radius: 20px;
+        //border-radius: 20px;
     }
     h1 {
-        text-align: center;
+        text-align: left;
         color: #333;
     }
 </style>
@@ -25,10 +25,10 @@
 <!-- TODO header via js -->
 <div id="main">
 <h1>asanetargoss' Mostly Minecraft</h1>
-<p><b>Hi, I'm asanetargoss.</b> I play Minecraft (modded, Java) and do mostly Minecraft-related things under this alias, mainly programming mods in Java and writing fanfiction.
+<p><b>Hi, I'm <span style="color:#D70;">asanetargoss</span>.</b> I play <b><span style="color:#090;">Minecraft</span></b> (<b><span style="color:#808;">modded</span>, <span style="color:#E01;">Java</span></b>) and do mostly Minecraft-related things under this alias, mainly programming mods in <b><span style="color:#E01;">Java</span></b> and writing <b><span style="color:#966;">fanfiction</span></b>.
 </p>
 <p>
-Here's some of my stuff:
+Here's some of my <b><span style="color:#D06;">stuff</span></b>:
 <br />
 <ul>
     <li><a href="https://github.com/asanetargoss/HardcoreAlchemy/wiki" target="_blank">Hardcore Alchemy</a> - A hardcore/survival/magic modpack. Magic with consequences.</li>
@@ -38,8 +38,9 @@ Here's some of my stuff:
 </ul>
 </p>
 <p>You can find some more of my stuff and random ramblings on: <a href="https://github.com/asanetargoss" target="_blank">GitHub</a>, <a href="https://www.minecraftforum.net/members/asanetargoss" target=_blank">Minecraft Forum</a>, and <a href="https://twitter.com/asanetargoss" target="_blank">Twitter</a>. And occasionally <a href="https://www.reddit.com/r/feedthebeast/" target="_blank">r/feedthebeast</a>.</p>
+<br/>
 <p>
-And here are some useful links I've found related to Minecraft, mainly modding, which may be useful to you:
+And here are some useful <b><span style="color:#26E;">links</span></b> I've found related to <b><span style="color:#090;">Minecraft</span></b>, mainly <b><span style="color:#808;">modding</span></b>, which may be useful to you:
 </p>
 <p>
 Playing modded:
@@ -55,7 +56,8 @@ For Minecraft mod discovery, I use <a href="https://www.minecraftforum.net/forum
 Coremodding/Reverse-engineering:
 <br />
 <ul>
-    <li><a href="http://www.minecraftforum.net/forums/mapping-and-modding-java-edition/mapping-and-modding-tutorials/1571568-tutorial-1-6-2-changing-vanilla-without-editing" target="_blank">culegooner's Coremodding Tutorial</a> - Java-based coremodding in a nutshell aside from <em>@IFMLLoadingPlugin.SortingIndex(value = 1001)</em>. I might do a write-up at some point.</li>
+    <li><a href="http://www.minecraftforum.net/forums/mapping-and-modding-java-edition/mapping-and-modding-tutorials/1571568-tutorial-1-6-2-changing-vanilla-without-editing" target="_blank">culegooner's Coremodding Tutorial</a> - Java-based coremodding in a nutshell, aside from obfuscation mappings.</li>
+    <li><a href="./pages/coremod_reflection_PSA.md.html" target="_blank">Reflection/Coremodding PSA from a frustrated add-on developer</a> - Best practices on obfuscation mappings.</li>
     <li><a href="http://andrei.gmxhome.de/bytecode/index.html" target="_blank">Bytecode Outline</a> - Eclipse plugin for understanding Java bytecode and ObjectWeb ASM. Fair warning: the variable stack prediction feature was buggy the last time I used it. Otherwise, very useful.</li>
     <li><a href="http://www.modcoderpack.com/" target="_blank">Mod Coder Pack (MCP)</a> - Contains the MCP Mapping Viewer, a handy tool that lets you look up what class/field/method names are depending on the environment.</li>
     <li><a href="http://jd.benow.ca/" target="_blank">Java Decompiler</a> - The IDE plugin makes working with random mods and source-less jars a lot easier. JD-GUI is also really nice for browsing mod jars.</li>
