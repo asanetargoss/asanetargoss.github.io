@@ -64,8 +64,6 @@ Consider taking advantage of interfaces and inner classes when considering the a
 
 ## Stuff I haven't tried
 
-I haven't tried messing with these techniques. If you try them and experience success/failure, please report back.
-
 <!-- TODO: decide if this is a thing ### Invoking new, anonymous classes, and lambdas
 
 As mentioned earlier, static method references do not trigger classloading if they are not used. This raises the question of whether other types of method calls trigger classloading simply by existing. For example, a class initializer using `new` is also just a method call. To be precise, the static method reference uses the `INVOKESTATIC` bytecode instruction, while code creating a class with `new` uses the `INVOKESPECIAL` bytecode instruction. Consider the following code:
