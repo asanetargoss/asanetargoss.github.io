@@ -1,0 +1,100 @@
+<head>
+<meta charset="utf-8">
+<title>Dealing with classloading during mod development</title>
+</head>
+<span id="top"></span>
+
+# Dealing with classloading during mod development
+
+*[asanetargoss](../), 2020-01-01*
+
+## Motivation
+
+Modded Minecraft is a giant mess of independently programmed Java plugins being loaded into the same virtual machine. Sometimes these mods have to depend on each other. Modding APIs like Minecraft Forge try to solve some of the more common compatibility issues by acting as a stable intermediary. But sometimes mods need to talk directly to each other.
+
+Depending on the feature, a mod may use an officially provided API (JEI recipes, Baubles, etc), or they may call another mod's code indirectly through vanilla code (items, entities, etc). Some cross-mod compatibility features may call mod code that is not part of a mod's official API, or may use Java reflection.
+
+In all of the above cases, it is likely that the mods installed by the player are different from the mods that the developer has tested with. This can lead to classloading errors, which can be prevented.
+
+Any Minecraft mod referencing client-only vanilla Minecraft code can also run into similar problems.
+
+!!!WARNING: Compatibility warning
+    All of the following advice applies to Java 8, and I assume you are using HotSpot or OpenJDK. Other Java Virtual Machines may have different behavior, and also may not be able to run modded Minecraft properly. Newer versions of Minecraft may require newer versions of Java, possibly with different classloading behavior.
+
+## What is classloading and when does it occur?
+
+Classloading is the Java Virtual Machine's way of incrementally loading parts of Java bytecode only when needed. The smallest unit of a java bytecode which can be loaded is a `.class` file. Every class in the source code gets compiled into a `.class` file. Inner classes and anonymous classes are in their own separate `.class` files.
+
+Classloading can occur in many situations. Here are some examples where classloading *may* occur:
+
+* **Entry point:** The JVM loads the class containing the `main()` function
+* **Fields:** Loaded class `EntityLivingBase` contains an field `lastPortalPos` of type `BlockPos`. `BlockPos` is loaded (if it hasn't been loaded already).
+* **Local variables:** Loaded class `SillyEntity` contains a method `makeRandomNoise()`. The code in `SillyEntity.makeRandomNoise()` has a local variable `rand` of type `Random`. The `Random` class is loaded if needed.
+* **Method parameters:** Loaded class `GuiIngameForge` contains a method `renderVignette(float, ScaledResolution)` The `ScaledResolution` class is loaded if needed.
+* **Inheritance:** Loaded class `SillyEntity` is derived from `EntityMob`. The `EntityMob` class is loaded if needed.
+
+Classloading does not occur in the following situations:
+
+* **Inner classes:** Loaded class `SillyEntity` has an inner class called `Renderer`, but nothing within the `SillyEntity` class references the `Renderer` inner class. So, nothing inside of `SillyEntity#Renderer` is necessarily loaded at that point.
+<!-- TODO: Decide if this is a thing that actually occurs: * **Static method references:** Loaded class `MagicStuff` has a method called `doCoolStuff(EntityPlayer)`, which calls a static method `MagicUtil.givePlayerCoolSpellbook(EntityPlayer)` only if the current year is 1985. Since the current year is not 1985, the `MagicUtil` class is not loaded at that point, even though the `MagicStuff` class references it. -->
+
+It's worth noting also that the final bytecode loaded into the JVM may be different than the original source code or even the compiled Java bytecode. In particular, older versions of Forge remove methods and classes from bytecode loaded at runtime, if they had the `@Optional` or `@SideOnly` annotations. In those cases, classloading proceeds as if those parts of the code never existed, with the exception of any code inside lambda functions.
+
+## When to watch out for classloading
+
+If your mod does any of the following:
+
+* References client classes not available on a dedicated server
+* References classes from mods that are not required dependencies
+* Does reflection dynamically (i.e., does reflection without knowing exactly what class is acted upon)
+
+Then you will need to deal with classloading.
+
+First, the dynamic reflection case. To prevent crashes with reflection, it is not sufficient to catch Exceptions in your try-catch block. You must also catch `NoClassDefFoundError`. `NoClassDefFoundError` can occur when doing reflection on a class that references code which triggers classloading. You may consider contributing code to the other mod to prevent the issue from occurring, which would allow your reflection code to function properly with that particular mod, and potentially prevent other compatibility issues with that mod as well.
+
+To prevent crashes in the other two cases, you will need to make sure your code doesn't cause classloading of things that don't exist. Then test in the situations where the classes are not available. For mod compat, this means testing your mod with only the required dependencies. For client-only code, this means testing on a dedicated server. Please note that this testing can only detect certain kinds of classloading issues.
+
+## Defensive class referencing
+
+Regardless of your mod loader, keeping mod-specific or client-specific functionality in separate classes is an effective way to avoid unwanted classloading. Many Minecraft modders choose to separate their mod code into different packages based on whether the Minecraft code runs on the client side, server side, or both.
+
+However, you can mix and match a package-based approach with other techniques that take advantage of how classloading works. You can <!-- TODO: decide if this is a thing selectively call static functions or --> use reflection to have more control over which classes get loaded. And depending on your situation, you may also have access to means to selectively strip methods from your class bytecode (for example, `@Optional` and `@SideOnly` in older Forge versions).
+
+Consider taking advantage of interfaces and inner classes when considering the above techniques. The official documentation for the modloader you use should also have best practices for development, which may include modloader-specific features for classloading.
+
+## Stuff I haven't tried
+
+I haven't tried messing with these techniques. If you try them and experience success/failure, please report back.
+
+<!-- TODO: decide if this is a thing ### Invoking new, anonymous classes, and lambdas
+
+As mentioned earlier, static method references do not trigger classloading if they are not used. This raises the question of whether other types of method calls trigger classloading simply by existing. For example, a class initializer using `new` is also just a method call. To be precise, the static method reference uses the `INVOKESTATIC` bytecode instruction, while code creating a class with `new` uses the `INVOKESPECIAL` bytecode instruction. Consider the following code:
+
+```java
+public static Base createBase() {
+    Base object;
+    if (currentYearIs1985()) {
+        object = new Derived();
+    } else {
+        object = new AlsoDerived();
+    }
+    return object;
+}
+```
+In the above code, it is clear that `Base` will be classloaded, but I have not tested if `Derived` will be. Likewise if `new Derived()` is replaced with an anonymous class or a lambda. -->
+
+### Safer reflection
+
+In my testing, mod classes loaded by Forge seem less likely to trigger `NoClassDefFoundError` than my current usage of the Java reflection API. It is possible that this is an innate limitation of Java reflection. On the other hand, more clever use of reflection, use of a custom classloading techniques, or JVM hacks, may prevent errors.
+
+Bytecode validation can be disabled using JVM arguments, however I do not reccommend this except for testing purposes.
+
+### Coremodding
+
+Coremodding is just bytecode manipulation during classloading. Writing your own coremod in a performant way is beyond the scope of this article.
+
+[^ Jump to top](#top)
+
+<style class="fallback">body{visibility:hidden}</style><script>markdeepOptions={tocStyle:'none'};</script>
+<link rel="stylesheet" href="3rdparty/markdeep/markdeep_apidoc.css?">
+<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="3rdparty/markdeep/markdeep.min.js"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>
